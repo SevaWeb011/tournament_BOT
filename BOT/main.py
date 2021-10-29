@@ -250,8 +250,7 @@ def get_flag_is_child(chatId):
         return result
 
 def weekend_tournaments(chatID): #выполняет запрос на вывод пользователю турниров, которые состоятся на выходных текущей недели
-    
-    week_tournaments = []
+
     try:
         conn, cursor = connect_db()
         cursor.execute("SELECT t_start, t_end, t_name, CityID, link, is_child FROM tournament_go;")
@@ -259,6 +258,8 @@ def weekend_tournaments(chatID): #выполняет запрос на выво�
 
         userId = getUserIdByChatId(chatID)
         city_user = getCitiesByUserId(userId)
+
+        week_tournaments = []
 
         for res in result:
             if res[0] == get_saturday() or res[0] == get_sunday():
@@ -268,7 +269,7 @@ def weekend_tournaments(chatID): #выполняет запрос на выво�
                     tournament += "Название: " + res[2] + "\n\n"
                     tournament += "Город: " + getCityNameById(res[3]) + "\n\n"
                     tournament += "Подробнее: " + res[4] + "\n"
-                    tournament += res[5] + "\n"
+                    tournament += "is_child: " + str(res[5]) + "\n"
                     week_tournaments.append(tournament)
 
         conn.commit()

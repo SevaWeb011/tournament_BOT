@@ -132,16 +132,21 @@ def message(message):
         #     return
         
         if message.text.lower() == "/weekend_tournaments" or message.text.lower() == "турниры на выходных":
+            if len(main.weekend_tournaments(message.chat.id)) != 0:
+                for flag in main.get_flag_is_child(message.chat.id):
+                    for tournament in main.weekend_tournaments(message.chat.id):
 
-            for flag in main.get_flag_is_child(message.chat.id):
-                for tournament in main.weekend_tournaments(message.chat.id):
-                    if flag[0] == 0 and tournament[5] == 1:
-                        bot.send_message(message.chat.id, 'Турниры в твоем городе на выходные не запланированы', reply_markup=mainButton)
-                    if flag[0] == 0 and tournament[5] == 0:
-                        bot.send_message(message.chat.id, 'Турнир в твоем городе на выходные 🏆... \n\n' + tournament, reply_markup=mainButton)
-                    if flag[0] == 1:
-                        bot.send_message(message.chat.id, 'Турнир в твоем городе на выходные 🏆... \n\n' + tournament, reply_markup=mainButton)
-
+                        if "is_child: 0" in tournament:
+                            bot.send_message(message.chat.id, 'Турнир в твоем городе на выходные... \n\n' + tournament, reply_markup=mainButton)
+                        
+                        if "is_child: 1" in tournament:
+                            if flag[0] == 1:
+                                bot.send_message(message.chat.id, 'Турнир в твоем городе на выходные... \n\n' + tournament, reply_markup=mainButton)
+                return
+            
+            if len(main.weekend_tournaments(message.chat.id)) == 0:
+                bot.send_message(message.chat.id, 'Турниры в твоем городе на выходные не запранированы', reply_markup=mainButton)
+                return
 
         if message.text.lower() == "/my_city" or message.text.lower() == "мой город":
             for city in main.my_city(message.chat.id):
