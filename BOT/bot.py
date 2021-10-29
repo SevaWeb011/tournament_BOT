@@ -132,11 +132,16 @@ def message(message):
         #     return
         
         if message.text.lower() == "/weekend_tournaments" or message.text.lower() == "турниры на выходных":
-            if len(main.weekend_tournaments()) == 0:
-                bot.send_message(message.chat.id, 'В твоем городе пока что нет запланированных турниров :(', reply_markup=mainButton)
-            else:
-                bot.send_message(message.chat.id, 'Турниры на выходные 👀 ... \n ============================== \n' + main.weekend_tournaments(), reply_markup=mainButton)            
-            return
+
+            for flag in main.get_flag_is_child(message.chat.id):
+                for tournament in main.weekend_tournaments(message.chat.id):
+                    if flag[0] == 0 and tournament[5] == 1:
+                        bot.send_message(message.chat.id, 'Турниры в твоем городе на выходные не запланированы', reply_markup=mainButton)
+                    if flag[0] == 0 and tournament[5] == 0:
+                        bot.send_message(message.chat.id, 'Турнир в твоем городе на выходные 🏆... \n\n' + tournament, reply_markup=mainButton)
+                    if flag[0] == 1:
+                        bot.send_message(message.chat.id, 'Турнир в твоем городе на выходные 🏆... \n\n' + tournament, reply_markup=mainButton)
+
 
         if message.text.lower() == "/my_city" or message.text.lower() == "мой город":
             for city in main.my_city(message.chat.id):
@@ -179,80 +184,7 @@ def message(message):
             bot.send_message(message.chat.id, 'Я тебя не понимаю, напиши что-нибудь другое :(')
 
 #=======================================================================================================
-    
-    if SelectState == "main_child":
-
-        if message.text.lower() == "/start" or message.text.lower() == "приветствие":
-            bot.send_message(message.chat.id, 'Здравствуй, ' + message.chat.first_name, reply_markup=mainButton)
-            return
-       
-        if message.text.lower() == "/tournaments" or message.text.lower() == "все турниры":
-            for tournament in main.all_tournaments():
-                bot.send_message(message.chat.id, '🏆 \n' + tournament, reply_markup=mainButton)
-            for tournament in main.all_tournaments20():
-                bot.send_message(message.chat.id, 'Детский турнир \n\n' + tournament, reply_markup=mainButton)
-            return
-        
-        if message.text.lower() == "/weekend_tournaments" or message.text.lower() == "турниры на выходных":
-
-            if len(main.weekend_tournaments()) == 0:
-                bot.send_message(message.chat.id, 'В твоем городе пока что нет запланированных турниров :(', reply_markup=mainButton)
-            else:
-                bot.send_message(message.chat.id, 'Турниры на выходные 👀 ... \n ============================== \n' + main.weekend_tournaments(), reply_markup=mainButton)
-            
-            if len(main.weekend_tournaments20()) == 0:
-                bot.send_message(message.chat.id, 'В твоем городе пока что нет запланированных турниров :(', reply_markup=mainButton)
-            else:
-                bot.send_message(message.chat.id, 'Детские турниры на выходные 👀 ...\n ============================== \n' + main.weekend_tournaments20(), reply_markup=mainButton)
-            return
-
-        if message.text.lower() == "/my_city" or message.text.lower() == "мой город":
-            for city in main.my_city(message.chat.id):
-                bot.send_message(message.chat.id, city, reply_markup=mainButton)
-            return
-
-        if message.text.lower() == "/message_to_developer" or message.text.lower() == "сообщение автору":
-            bot.send_message(message.chat.id, 'Ограничены права. Ты не можешь написать разработчику.', reply_markup=mainButton)
-            return
-        
-        if message.text.lower() == "/tournaments_in_my_city" or message.text.lower() == "турниры в моем городе":
-            if len(main.all_tournaments_in_city(message.chat.id)) == 0:
-                bot.send_message(message.chat.id, 'В твоем городе пока что нет запланированных турниров :(', reply_markup=mainButton)
-
-            for tournament in main.all_tournaments_in_city(message.chat.id):
-                bot.send_message(message.chat.id, 'Турнир в твоем городе 🏆... \n\n' + tournament, reply_markup=mainButton)
-
-            if len(main.all_tournaments_in_city(message.chat.id)) == 0:
-                bot.send_message(message.chat.id, 'В твоем городе пока что нет запланированных детских турниров :(', reply_markup=mainButton)
-
-            for tournament in main.all_tournaments_in_city_up_to_20(message.chat.id):
-                bot.send_message(message.chat.id, 'Детский турнир в твоем городе 🏆... \n\n' + tournament, reply_markup=mainButton)
-            return
-
-        if message.text.lower() == "/change_city" or message.text.lower() == "сменить города":
-            main.remove_city_for_user(message.chat.id)
-            main.query_change_state("change_city", message.chat.id)
-            SelectState = main.selectState(message.chat.id)
-            bot.send_message(message.chat.id, 'Я очистил твои города')
-            bot.send_message(message.chat.id, 'Выбирай новые, если не появилась клавиатура напиши команду /start', reply_markup=towns)
-            return
-
-        if message.text.lower() == "/become_an_adult":
-            main.query_change_state("main", message.chat.id)
-            SelectState = main.selectState(message.chat.id)
-            main.subscribe_to_child_change(message.chat.id, 0)
-            bot.send_message(message.chat.id, 'Ты отписался от рассылки детских турниров. Чтобы снова получать детские турниры напиши команду /child_tournaments или кнопкой, получать детские турниры', reply_markup=mainButton)
-            return
-
-        if message.text.lower() == "/child_tournaments":
-            bot.send_message(message.chat.id, 'Ты уже находишься в детской категории', reply_markup=mainButton)
-            return
-
-        else: 
-            bot.send_message(message.chat.id, 'Я тебя не понимаю, напиши что-нибудь другое :(')
-
-#=======================================================================================================
-
+  
     if SelectState == "message_to_developer" and message.text.lower() != "/message_to_developer":
 
         bot.send_message(925936432, "Сообщение от: " + "\n" + str(message.chat.id) + "\n" + str(message.html_text))

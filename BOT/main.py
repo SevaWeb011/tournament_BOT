@@ -234,23 +234,11 @@ def getCitiesByUserId(userId):
             conn.close()
             return ids
 
-def weekend_tournaments(): #выполняет запрос на вывод пользователю турниров, которые состоятся на выходных текущей недели
+def get_flag_is_child(chatId):
     try:
         conn, cursor = connect_db()
-        cursor.execute("SELECT t_start, t_end, t_name, CityID, link FROM tournament_go;")
-        tournament = ""
+        cursor.execute("SELECT is_child FROM user_BotGo WHERE id_User = '" + str(chatId) + "';")
         result = cursor.fetchall()
-
-        for item in result:
-            if item[0] == get_saturday() or item[0] == get_sunday():
-                tournament += "Начало: " + str(item[0]) + "\n"
-                tournament += "Конец: " + str(item[1]) + "\n\n"
-                tournament += "Название: " + item[2] + "\n\n"
-                tournament += "Город: " + getCityNameById(item[3]) + "\n\n"
-                tournament += "Подробнее: " + item[4] + "\n\n"
-                tournament += "==============================" + "\n\n"
-
-               
         conn.commit()
 
     except Error as e:
@@ -259,7 +247,39 @@ def weekend_tournaments(): #выполняет запрос на вывод по
     finally:
         cursor.close()
         conn.close()
-        return tournament
+        return result
+
+def weekend_tournaments(chatID): #выполняет запрос на вывод пользователю турниров, которые состоятся на выходных текущей недели
+    
+    week_tournaments = []
+    try:
+        conn, cursor = connect_db()
+        cursor.execute("SELECT t_start, t_end, t_name, CityID, link, is_child FROM tournament_go;")
+        result = cursor.fetchall()
+
+        userId = getUserIdByChatId(chatID)
+        city_user = getCitiesByUserId(userId)
+
+        for res in result:
+            if res[0] == get_saturday() or res[0] == get_sunday():
+                if str(res[3]) in city_user:
+                    tournament = "Начало: " + str(res[0]) + "\n"
+                    tournament += "Конец: " + str(res[1]) + "\n\n"
+                    tournament += "Название: " + res[2] + "\n\n"
+                    tournament += "Город: " + getCityNameById(res[3]) + "\n\n"
+                    tournament += "Подробнее: " + res[4] + "\n"
+                    tournament += res[5] + "\n"
+                    week_tournaments.append(tournament)
+
+        conn.commit()
+
+    except Error as e:
+        print(e)
+
+    finally:
+        cursor.close()
+        conn.close()
+        return week_tournaments
 
 def get_saturday(): #эта функция получает дату субботы текущей недели 
     num_date = datetime.now().date().weekday()
