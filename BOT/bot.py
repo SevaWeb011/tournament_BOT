@@ -152,17 +152,20 @@ def message(message):
             return
         
         if message.text.lower() == "/tournaments_in_my_city" or message.text.lower() == "турниры в моем городе": 
-            if len(main.all_tournaments_in_city(message.chat.id)) == 0:
+
+            userId = main.getUserIdByChatId(message.chat.id)
+
+            if(main.is_user_child(userId)):
+                tournaments = main.all_tournaments_in_city(message.chat.id)
+            else: 
+                tournaments = main.get_adult_tournaments_in_city(message.chat.id)
+            
+            if len(tournaments) == 0:
                 bot.send_message(message.chat.id, 'В твоем городе пока что нет запланированных турниров :(', reply_markup=mainButton)
-            for flag in main.get_flag_is_child(message.chat.id):
-                for tournament in main.all_tournaments_in_city(message.chat.id):
+                
+            for tournament in tournaments:
+                bot.send_message(message.chat.id, 'Турнир в твоем городе 🏆... \n\n' + tournament, reply_markup=mainButton)
                     
-                    if "is_child: 0" in tournament:
-                        bot.send_message(message.chat.id, 'Турнир в твоем городе 🏆... \n\n' + tournament, reply_markup=mainButton)
-                    
-                    if "is_child: 1" in tournament:
-                        if flag[0] == 1:
-                            bot.send_message(message.chat.id, 'Турнир в твоем городе 🏆... \n\n' + tournament, reply_markup=mainButton)
             
             return
 

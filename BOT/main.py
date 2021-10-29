@@ -202,6 +202,35 @@ def all_tournaments_in_city(chatID): #выполняет запрос на вы�
                 tournament += "Название: " + res[2] + "\n\n"
                 tournament += "Город: " + getCityNameById(res[3]) + "\n\n"
                 tournament += "Подробнее: " + res[4] + "\n"
+                all_tournaments.append(tournament)
+
+        conn.commit()
+
+    except Error as e:
+        print(e)
+
+    finally:
+        cursor.close()
+        conn.close()
+        return all_tournaments
+
+def get_adult_tournaments_in_city(chatID): #выполняет запрос на вывод пользователю всех туниров в его городе
+    all_tournaments = []
+    try:
+        conn, cursor = connect_db()
+        cursor.execute("SELECT t_start, t_end, t_name, CityID, link, is_child FROM tournament_go WHERE is_child = 0;")
+        result = cursor.fetchall()
+
+        userId = getUserIdByChatId(chatID)
+        city_user = getCitiesByUserId(userId)
+
+        for res in result:
+            if str(res[3]) in city_user:
+                tournament = "Начало: " + str(res[0]) + "\n"
+                tournament += "Конец: " + str(res[1]) + "\n\n"
+                tournament += "Название: " + res[2] + "\n\n"
+                tournament += "Город: " + getCityNameById(res[3]) + "\n\n"
+                tournament += "Подробнее: " + res[4] + "\n"
                 tournament += "is_child: " + str(res[5]) + "\n"
                 all_tournaments.append(tournament)
 
@@ -254,7 +283,7 @@ def weekend_tournaments(chatID): #выполняет запрос на выво�
 
     try:
         conn, cursor = connect_db()
-        cursor.execute("SELECT t_start, t_end, t_name, CityID, link, is_child FROM tournament_go;")
+        cursor.execute("SELECT t_start, t_end, t_name, CityID, link, is_child FROM tournament_go WHERE DAYOFWEEK(t_start) IN (1,7);")
         result = cursor.fetchall()
 
         userId = getUserIdByChatId(chatID)
@@ -263,15 +292,14 @@ def weekend_tournaments(chatID): #выполняет запрос на выво�
         week_tournaments = []
 
         for res in result:
-            if res[0] == get_saturday() or res[0] == get_sunday():
-                if str(res[3]) in city_user:
-                    tournament = "Начало: " + str(res[0]) + "\n"
-                    tournament += "Конец: " + str(res[1]) + "\n\n"
-                    tournament += "Название: " + res[2] + "\n\n"
-                    tournament += "Город: " + getCityNameById(res[3]) + "\n\n"
-                    tournament += "Подробнее: " + res[4] + "\n"
-                    tournament += "is_child: " + str(res[5]) + "\n"
-                    week_tournaments.append(tournament)
+            if str(res[3]) in city_user:
+                tournament = "Начало: " + str(res[0]) + "\n"
+                tournament += "Конец: " + str(res[1]) + "\n\n"
+                tournament += "Название: " + res[2] + "\n\n"
+                tournament += "Город: " + getCityNameById(res[3]) + "\n\n"
+                tournament += "Подробнее: " + res[4] + "\n"
+                tournament += "is_child: " + str(res[5]) + "\n"
+                week_tournaments.append(tournament)
 
         conn.commit()
 
@@ -282,50 +310,6 @@ def weekend_tournaments(chatID): #выполняет запрос на выво�
         cursor.close()
         conn.close()
         return week_tournaments
-
-def get_saturday(): #эта функция получает дату субботы текущей недели 
-    num_date = datetime.now().date().weekday()
-    today = datetime.now().date()
-    saturday = ""
-
-    if num_date == 0:
-        saturday = today + timedelta(days=5)
-    if num_date == 1:
-        saturday = today + timedelta(days=4)
-    if num_date == 2:
-        saturday = today + timedelta(days=3)    
-    if num_date == 3:
-        saturday = today + timedelta(days=2)
-    if num_date == 4:
-        saturday = today + timedelta(days=1)
-    if num_date == 5:
-        saturday = today + timedelta(days=0)
-    if num_date == 6:
-        saturday = today + timedelta(days=6)
-
-    return saturday
-
-def get_sunday(): #эта функция получает дату воскресенья текущей недели 
-    num_date = datetime.now().date().weekday()
-    today = datetime.now().date()
-    sunday = ""
-
-    if num_date == 0:
-        sunday = today + timedelta(days=6)
-    if num_date == 1:
-        sunday = today + timedelta(days=5)
-    if num_date == 2:
-        sunday = today + timedelta(days=4)    
-    if num_date == 3:
-        sunday = today + timedelta(days=3)
-    if num_date == 4:
-        sunday = today + timedelta(days=2)
-    if num_date == 5:
-        sunday = today + timedelta(days=1)
-    if num_date == 6:
-        sunday = today + timedelta(days=0)
-
-    return sunday
 
 def check_exist_user(chatID): #проверка записи пользователя, чтобы не записывался один пользователь несколько раз
 
@@ -512,47 +496,6 @@ def get_cities_by_new_tournament_id(tournamentId):
         conn.close()
         return ids
 
-def all_tournaments_in_city_NEW(chatID): #выполняет запрос на вывод пользователю всех туниров в его городе
-    try:
-        conn, cursor = connect_db()
-        cursor.execute("SELECT id, t_start, t_end, t_name, CityID, link FROM NEW_tournament_go;")
-        all_tournaments = []
-        result = cursor.fetchall()
-
-        city_user = my_city(chatID)
-
-        for res in result:
-            if res[4] in city_user:
-                tournament = "Начало: " + str(res[1]) + "\n"
-                tournament += "Конец: " + str(res[2]) + "\n\n"
-                tournament += "Название: " + res[3] + "\n\n"
-                tournament += "Город: " + getCityNameById(res[4]) + "\n\n"
-                tournament += "Подробнее: " + res[5] + "\n"
-                all_tournaments.append([res[0], tournament])
-
-        conn.commit()
-
-    except Error as e:
-        print(e)
-
-    finally:
-        cursor.close()
-        conn.close()
-        return all_tournaments
-
-def delete_all_from_NEW():
-    try:
-        conn, cursor = connect_db()
-        cursor.execute("DELETE FROM NEW_tournament_go")
-        conn.commit()
-
-    except Error as e:
-        print('Error:', e)
-
-    finally:
-        cursor.close()
-        conn.close()
-
 # def message_was_send(userID, tournament):
 #     try:
 #         dbconfig = read_db_config()
@@ -712,6 +655,21 @@ def remove_city_for_user(chatId):
     finally:
         cursor.close()
         conn.close()
+
+def is_user_child(userId):
+    try:
+        conn, cursor = connect_db()
+        cursor.execute("SELECT is_child FROM user_BotGo WHERE id = '" + str(userId) + "';")
+        user = cursor.fetchall()[0]
+        return bool(user[0])
+        
+    except Error as e:
+        print(e)
+
+    finally:
+        cursor.close()
+        conn.close()
+
 
 
 # if __name__ == '__main__':
