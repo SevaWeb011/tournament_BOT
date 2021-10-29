@@ -15,6 +15,7 @@ global listCity
 listCity = []
 
 @bot.message_handler(content_types=['text'])
+
 def message(message):
 
     mainButton = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -53,7 +54,7 @@ def message(message):
     SelectState = main.selectState(message.chat.id)
 
 #=======================================================================================================
-
+#ИСПРАВНО
     if SelectState == "city_selection":
 
         all_city = sorted(set(main.get_all_cities()) - set(listCity))
@@ -79,7 +80,7 @@ def message(message):
             listCity.clear()
 
 #=======================================================================================================
-
+#ИСПРАВНО
     if SelectState == "change_city":
         
         all_city = sorted(set(main.get_all_cities()) - set(listCity))
@@ -107,7 +108,7 @@ def message(message):
           
 
 #=======================================================================================================
-
+#ИСПРАВНО
     if SelectState == "age_category":
 
         if message.text.lower() == "я ребенок (до 18 лет)":
@@ -119,7 +120,7 @@ def message(message):
         return
 
 #=======================================================================================================
-
+ #ИСПРАВНО
     if SelectState == "main":
 
         if message.text.lower() == "/start" or message.text.lower() == "приветствие":
@@ -132,32 +133,37 @@ def message(message):
         #     return
         
         if message.text.lower() == "/weekend_tournaments" or message.text.lower() == "турниры на выходных":
-            if len(main.weekend_tournaments(message.chat.id)) != 0:
-                for flag in main.get_flag_is_child(message.chat.id):
-                    for tournament in main.weekend_tournaments(message.chat.id):
-
-                        if "is_child: 0" in tournament:
-                            bot.send_message(message.chat.id, 'Турнир в твоем городе на выходные... \n\n' + tournament, reply_markup=mainButton)
-                        
-                        if "is_child: 1" in tournament:
-                            if flag[0] == 1:
-                                bot.send_message(message.chat.id, 'Турнир в твоем городе на выходные... \n\n' + tournament, reply_markup=mainButton)
-                return
-            
             if len(main.weekend_tournaments(message.chat.id)) == 0:
                 bot.send_message(message.chat.id, 'Турниры в твоем городе на выходные не запранированы', reply_markup=mainButton)
-                return
+            for flag in main.get_flag_is_child(message.chat.id):
+                for tournament in main.weekend_tournaments(message.chat.id):
 
+                    if "is_child: 0" in tournament:
+                        bot.send_message(message.chat.id, 'Турнир в твоем городе на выходные... \n\n' + tournament, reply_markup=mainButton)
+                        
+                    if "is_child: 1" in tournament:
+                        if flag[0] == 1:
+                            bot.send_message(message.chat.id, 'Турнир в твоем городе на выходные... \n\n' + tournament, reply_markup=mainButton)
+            return
+            
         if message.text.lower() == "/my_city" or message.text.lower() == "мой город":
             for city in main.my_city(message.chat.id):
                 bot.send_message(message.chat.id, city, reply_markup=mainButton)
             return
         
-        if message.text.lower() == "/tournaments_in_my_city" or message.text.lower() == "турниры в моем городе":
+        if message.text.lower() == "/tournaments_in_my_city" or message.text.lower() == "турниры в моем городе": 
             if len(main.all_tournaments_in_city(message.chat.id)) == 0:
                 bot.send_message(message.chat.id, 'В твоем городе пока что нет запланированных турниров :(', reply_markup=mainButton)
-            for tournament in main.all_tournaments_in_city(message.chat.id):
-                bot.send_message(message.chat.id, 'Турнир в твоем городе 🏆... \n\n' + tournament, reply_markup=mainButton)
+            for flag in main.get_flag_is_child(message.chat.id):
+                for tournament in main.all_tournaments_in_city(message.chat.id):
+                    
+                    if "is_child: 0" in tournament:
+                        bot.send_message(message.chat.id, 'Турнир в твоем городе 🏆... \n\n' + tournament, reply_markup=mainButton)
+                    
+                    if "is_child: 1" in tournament:
+                        if flag[0] == 1:
+                            bot.send_message(message.chat.id, 'Турнир в твоем городе 🏆... \n\n' + tournament, reply_markup=mainButton)
+            
             return
 
         if message.text.lower() == "/message_to_developer" or message.text.lower() == "сообщение автору":
@@ -175,28 +181,41 @@ def message(message):
             return
 
         if message.text.lower() == "/child_tournaments":
-            main.query_change_state("main_child", message.chat.id)
-            SelectState = main.selectState(message.chat.id)
-            bot.send_message(message.chat.id, 'Ты подписался на рассылку детских турниров. Это можно отменить командой /become_an_adult, или кнопкой, получать детские турниры', reply_markup=mainButton)
-            main.subscribe_to_child_change(message.chat.id, 1)
+            for flag in main.get_flag_is_child(message.chat.id):
+
+                if flag[0] == 0:
+                    bot.send_message(message.chat.id, 'Ты подписался на рассылку детских турниров. Это можно отменить командой /become_an_adult', reply_markup=mainButton)
+                    main.subscribe_to_child_change(message.chat.id, 1)
+                if flag[0] == 1:
+                    bot.send_message(message.chat.id, 'Ты уже находишься в детской категории', reply_markup=mainButton)
+
             return
 
         if message.text.lower() == "/become_an_adult":
-            bot.send_message(message.chat.id, 'Ты уже находишься во взрослой категории.', reply_markup=mainButton)
+            for flag in main.get_flag_is_child(message.chat.id):
+
+                if flag[0] == 0:
+                    bot.send_message(message.chat.id, 'Ты уже находишься во взрослой категории', reply_markup=mainButton)
+                if flag[0] == 1:
+                    main.subscribe_to_child_change(message.chat.id, 0)
+                    bot.send_message(message.chat.id, 'Ты отписался от рассылки детских турниров', reply_markup=mainButton)
+
             return
 
         else: 
             bot.send_message(message.chat.id, 'Я тебя не понимаю, напиши что-нибудь другое :(')
 
 #=======================================================================================================
-  
-    if SelectState == "message_to_developer" and message.text.lower() != "/message_to_developer":
+  #ИСПРАВНО
+    if SelectState == "message_to_developer" and message.text.lower() != "/message_to_developer": 
 
         bot.send_message(925936432, "Сообщение от: " + "\n" + str(message.chat.id) + "\n" + str(message.html_text))
 
         bot.send_message(message.chat.id, "Отправил")
         main.query_change_state("main", message.chat.id)
         bot.send_message(message.chat.id, 'Если хочешь еще раз написать разработчику, напиши команду /message_to_developer', reply_markup=mainButton)
+
+#=======================================================================================================
 
 def push_message():
     try:
@@ -246,26 +265,22 @@ def log(chatID, action, level):
     if level == logging.INFO:
         logger.info(json.dumps(data))
 
+def welcome(chat, mainButton):
+    main.query_change_state("main", chat.id)
+    SelectState = main.selectState(chat.id)
+    bot.send_message(chat.id, 'Добро пожаловать 👋, ' + chat.first_name, reply_markup=mainButton)
+
 def background():
     while True:
         main.download_page("https://gofederation.ru/tournaments/", "current.html"),  # скачивание актуальной версии турниров
         main.compare("current.html", "old.html"),  # сравнение
         main.copy_current_to_old("old.html", "current.html"),  # замена старого на новое
         #main.main(),  # запись новых турниров
-        # push_message(),  # уведомление пользователей о новых турнирах
-        # push_message_up_to_20(), # уведомление пользователей о новых детских турнирах
-        # main.delete_all_from_NEW(),  # удаление турниров из новых
-        # main.del_message_was_send(),  # очистка отправленных сообщений
-        # main.main(),  # добавление новых турниров в основную таблицу
+        #push_message(),  # уведомление пользователей о новых турнирах
         main.delete_old_tournaments(),  # удаление устаревших по дате турниров из основной таблицы
 
         time.sleep(10)
         
-def welcome(chat, mainButton):
-    main.query_change_state("main", chat.id)
-    SelectState = main.selectState(chat.id)
-    bot.send_message(chat.id, 'Добро пожаловать 👋, ' + chat.first_name, reply_markup=mainButton)
-    
 
 if __name__ == '__main__':
 

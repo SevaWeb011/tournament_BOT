@@ -189,7 +189,7 @@ def all_tournaments_in_city(chatID): #выполняет запрос на вы�
     all_tournaments = []
     try:
         conn, cursor = connect_db()
-        cursor.execute("SELECT t_start, t_end, t_name, CityID, link FROM tournament_go;")
+        cursor.execute("SELECT t_start, t_end, t_name, CityID, link, is_child FROM tournament_go;")
         result = cursor.fetchall()
 
         userId = getUserIdByChatId(chatID)
@@ -202,6 +202,7 @@ def all_tournaments_in_city(chatID): #выполняет запрос на вы�
                 tournament += "Название: " + res[2] + "\n\n"
                 tournament += "Город: " + getCityNameById(res[3]) + "\n\n"
                 tournament += "Подробнее: " + res[4] + "\n"
+                tournament += "is_child: " + str(res[5]) + "\n"
                 all_tournaments.append(tournament)
 
         conn.commit()
